@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tint Visualizer - Sedan</title>
+    <link rel="stylesheet" href="tint-styles.css">
+    <!-- Removed auto-refresh code -->
+</head>
+<body style="margin:0;padding:0;background:transparent;">
+<div class="tint-selector-container" style="max-width:none;width:100%;margin:0;background:transparent;box-shadow:none;border-radius:0;padding:0;">
+    <h2>WHICH TINT WORKS BEST FOR YOU?</h2>
+    <button class="choose-tint-btn">CHOOSE YOUR TINT %</button>
+
+    <div class="tint-percentage-buttons">
+        <button data-tint="Clear">Clear</button>
+        <button data-tint="5%">5%</button>
+        <button data-tint="20%">20%</button>
+        <button data-tint="35%">35%</button>
+        <button data-tint="50%">50%</button>
+    </div>
+
+    <div class="sedan-views-container">
+        <!-- Front/Driver Side View -->
+        <div class="car-visualization">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/main/tint-selector-multibody/Sedan%20Front%20End.png" alt="Car Body" class="car-body">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanWindshield.webp" alt="Windshield Tint" class="window-tint" id="sedan-windshield-tint" style="display: none;">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanDriverWindow.webp" alt="Driver Window Tint" class="window-tint" id="sedan-driver-window-tint" style="display: none;">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanRearDriverWindow.webp" alt="Rear Driver Window Tint" class="window-tint" id="sedan-rear-driver-window-tint" style="display: none;">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanHeadlights.webp" alt="Headlights Tint" class="window-tint" id="sedan-headlights-tint" style="display: none;">
+        </div>
+        <!-- Rear/Passenger Side View -->
+        <div class="car-visualization">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/main/tint-selector-multibody/Sedan%20Rear%20End.png" alt="Car Rear Body" class="car-body">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanRearWindshield.webp" alt="Rear Windshield Tint" class="window-tint" id="sedan-rear-windshield-tint" style="display: none;">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanPassengerWindow.webp" alt="Passenger Window Tint" class="window-tint" id="sedan-passenger-window-tint" style="display: none;">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanRearPassengerwindow.webp" alt="Rear Passenger Window Tint" class="window-tint" id="sedan-rear-passenger-window-tint" style="display: none;">
+            <img src="https://raw.githubusercontent.com/JauneDoe/BadBoysTintForm/refs/heads/main/tint-selector-multibody/SedanTailLights.webp" alt="Tail Lights Tint" class="window-tint" id="sedan-tail-lights-tint" style="display: none;">
+        </div>
+    </div>
+
+    <form id="tintForm">
+        <input type="hidden" name="selected_tint_percentage" id="selected-tint-percentage-input">
+    </form>
+
+    <div class="package-quote-section">
+        <h3>SELECT YOUR PACKAGE AND GET A QUOTE FROM US TODAY!</h3>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const percentageButtons = document.querySelectorAll('.tint-percentage-buttons button');
+    const selectedTintInput = document.getElementById('selected-tint-percentage-input');
+    let activeTintMenu = null;
+
+    const windowElements = {
+        windshield: document.getElementById('sedan-windshield-tint'),
+        driver: document.getElementById('sedan-driver-window-tint'),
+        rearDriver: document.getElementById('sedan-rear-driver-window-tint'),
+        headlights: document.getElementById('sedan-headlights-tint'),
+        rearWindshield: document.getElementById('sedan-rear-windshield-tint'),
+        passenger: document.getElementById('sedan-passenger-window-tint'),
+        rearPassenger: document.getElementById('sedan-rear-passenger-window-tint'),
+        tailLights: document.getElementById('sedan-tail-lights-tint')
+    };
+
+    function applyTintToWindow(el, tintPercentageString) {
+        if (el) {
+            // Log the full src path the browser is trying to use
+            console.log('Element details for ID', el.id, '-> Resolved src by browser:', el.src);
+        }
+        let isInvalidSrc = false;
+        if (!el || !el.src || el.src.includes('path/to/your/') || el.src.endsWith('/') || el.src === window.location.href || el.src.trim() === '') {
+            isInvalidSrc = true;
+        }
+        if (isInvalidSrc) {
+            if (el) {
+                el.style.display = 'none';
+            }
+            return;
+        }
+        const placeholderPaths = ['path/to/your/', 'undefined', null];
+        let isPlaceholder = false;
+        if (!el.src || el.src.trim() === '' || el.src.endsWith('/') || placeholderPaths.some(p => el.src.includes(p))) {
+            isPlaceholder = true;
+        }
+        if(isPlaceholder){
+            el.style.display = 'none';
+            return;
+        }
+        el.style.display = 'block';
+        el.dataset.currentTint = tintPercentageString;
+        let opacityLevel;
+        if (tintPercentageString === "Clear") {
+            opacityLevel = '0';
+        } else {
+            const tintValue = tintPercentageString.replace('%', '');
+            let calculatedOpacity = 0.30;
+            if (tintValue === "5") calculatedOpacity = 0.95;
+            else if (tintValue === "15") calculatedOpacity = 0.85;
+            else if (tintValue === "20") calculatedOpacity = 0.80;
+            else if (tintValue === "35") calculatedOpacity = 0.65;
+            else if (tintValue === "50") calculatedOpacity = 0.30; // Changed: 50% now displays as 70% (0.30 opacity)
+            opacityLevel = calculatedOpacity.toString();
+        }
+        el.style.opacity = opacityLevel;
+    }
+
+    function removeTintMenu() {
+        if (activeTintMenu) {
+            activeTintMenu.remove();
+            activeTintMenu = null;
+            document.removeEventListener('click', handleClickOutsideMenu, true);
+        }
+    }
+
+    function handleClickOutsideMenu(event) {
+        if (activeTintMenu && !activeTintMenu.contains(event.target)) {
+            let clickedOnWindowTint = false;
+            for (const key in windowElements) {
+                if (windowElements[key] === event.target) {
+                    clickedOnWindowTint = true;
+                    break;
+                }
+            }
+            if (!clickedOnWindowTint) {
+                removeTintMenu();
+            }
+        }
+    }
+
+    // Update the available tint options in the menu
+    function showTintMenuForWindow(el, clickEvent) {
+        removeTintMenu();
+        const menu = document.createElement('div');
+        menu.className = 'tint-options-menu';
+        const availableTints = ["5%", "20%", "35%", "50%", "Clear"]; // Updated tint options
+        availableTints.forEach(tint => {
+            const btn = document.createElement('button');
+            btn.textContent = tint;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                applyTintToWindow(el, tint);
+                removeTintMenu();
+            };
+            menu.appendChild(btn);
+        });
+        document.body.appendChild(menu);
+        activeTintMenu = menu;
+        menu.style.top = `${clickEvent.pageY + 10}px`;
+        menu.style.left = `${clickEvent.pageX + 5}px`;
+        setTimeout(() => {
+            document.addEventListener('click', handleClickOutsideMenu, true);
+        }, 0);
+    }
+
+    percentageButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            removeTintMenu();
+            percentageButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            const globalTintPercentage = button.dataset.tint;
+            if (selectedTintInput) {
+                selectedTintInput.value = globalTintPercentage;
+            }
+            for (const key in windowElements) {
+                applyTintToWindow(windowElements[key], globalTintPercentage);
+            }
+        });
+    });
+
+    for (const key in windowElements) {
+        const el = windowElements[key];
+        if (el && el.src && !el.src.includes('path/to/your/')) {
+            el.addEventListener('click', (event) => {
+                event.stopPropagation();
+                showTintMenuForWindow(el, event);
+            });
+        } else if (el) {
+            el.style.display = 'none';
+        }
+    }
+
+    const initialTintButton = document.querySelector('.tint-percentage-buttons button[data-tint="5%"]');
+    if (initialTintButton) {
+        initialTintButton.click();
+        
+        // Override specific windows to be clear on page load
+        const clearOnStart = [
+            windowElements.windshield, 
+            windowElements.driver,
+            windowElements.passenger,
+            windowElements.headlights,  // Added headlights
+            windowElements.tailLights   // Added taillights
+        ];
+        
+        clearOnStart.forEach(el => {
+            if (el) applyTintToWindow(el, "Clear");
+        });
+    } else {
+        for (const key in windowElements) {
+            if (windowElements[key] && windowElements[key].src && !windowElements[key].src.includes('path/to/your/')) {
+                applyTintToWindow(windowElements[key], "Clear");
+            }
+        }
+    }
+
+    let currentTintPercentage = '5%'; // Default or initial value
+
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'setTint') {
+            const tintValue = event.data.value;
+            currentTintPercentage = tintValue;
+            // Only update overlays that are currently visible
+            document.querySelectorAll('.window-tint').forEach(el => {
+                if (el.style.display !== 'none') {
+                    let opacityLevel = '0';
+                    if (tintValue === 'Clear') {
+                        opacityLevel = '0';
+                    } else {
+                        const tintNum = tintValue.replace('%', '');
+                        if (tintNum === '5') opacityLevel = '0.95';
+                        else if (tintNum === '15') opacityLevel = '0.85';
+                        else if (tintNum === '20') opacityLevel = '0.80';
+                        else if (tintNum === '35') opacityLevel = '0.65';
+                        else if (tintNum === '50') opacityLevel = '0.30';
+                        else opacityLevel = '0.30';
+                    }
+                    el.style.opacity = opacityLevel;
+                }
+            });
+        }
+        if (event.data && event.data.type === 'setTintArea') {
+            const areas = event.data.value || [];
+            const areaToIds = {
+                'All Side Windows': [
+                    'sedan-driver-window-tint',
+                    'sedan-passenger-window-tint',
+                    'sedan-rear-driver-window-tint',
+                    'sedan-rear-passenger-window-tint'
+                ],
+                'Front Windows Only': [
+                    'sedan-driver-window-tint',
+                    'sedan-passenger-window-tint'
+                ],
+                'Rear Windows Only': [
+                    'sedan-rear-driver-window-tint',
+                    'sedan-rear-passenger-window-tint'
+                ],
+                'Windshield Brow': ['sedan-windshield-tint'],
+                'Full Windshield': ['sedan-windshield-tint'],
+                'Rear Windshield': ['sedan-rear-windshield-tint'],
+                'Sunroof/Moonroof': [],
+                'Headlights': ['sedan-headlights-tint'],
+                'Taillights': ['sedan-tail-lights-tint'],
+                'Other': []
+            };
+            // Hide all window tints first
+            document.querySelectorAll('.window-tint').forEach(el => el.style.display = 'none');
+            // Show only selected areas and apply current tint
+            areas.forEach(area => {
+                (areaToIds[area] || []).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.style.display = 'block';
+                        // Apply current tint
+                        let opacityLevel = '0';
+                        if (currentTintPercentage === 'Clear') {
+                            opacityLevel = '0';
+                        } else {
+                            const tintNum = currentTintPercentage.replace('%', '');
+                            if (tintNum === '5') opacityLevel = '0.95';
+                            else if (tintNum === '15') opacityLevel = '0.85';
+                            else if (tintNum === '20') opacityLevel = '0.80';
+                            else if (tintNum === '35') opacityLevel = '0.65';
+                            else if (tintNum === '50') opacityLevel = '0.30';
+                            else opacityLevel = '0.30';
+                        }
+                        el.style.opacity = opacityLevel;
+                    }
+                });
+            });
+        }
+    });
+});
+</script>
+</body>
+</html>

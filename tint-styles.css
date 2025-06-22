@@ -1,0 +1,868 @@
+/* Premium Split-Screen Tint Configurator */
+
+/* Critical isolation system for vehicle overlays */
+.vehicle-overlay-system {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+  box-sizing: content-box !important;
+}
+
+/* Base reset */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Light mode colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #333;
+  --text-secondary: #666;
+  --accent: #3a86ff;
+  --border: #e6e6e6;
+  --card-bg: #fff;
+  --shadow: rgba(0, 0, 0, 0.05);
+
+  /* Transition for dark/light mode */
+  --transition-speed: 0.3s;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #f8f9fa;
+  --text-secondary: #aaa;
+  --accent: #5e96ff;
+  --border: #333;
+  --card-bg: #262626;
+  --shadow: rgba(0, 0, 0, 0.2);
+}
+
+body {
+  font-family: 'Manrope', 'SF Pro Display', -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+/* Split screen layout */
+.tint-configurator {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Left sidebar controls */
+.configurator-sidebar {
+  background-color: var(--bg-secondary);
+  padding: 40px 30px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  position: fixed;
+  width: 380px;
+  height: 100vh;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.configurator-content {
+  margin-left: 380px;
+  padding: 40px;
+  background-color: var(--bg-primary);
+  transition: background-color var(--transition-speed);
+}
+
+/* Logo and branding */
+.configurator-logo {
+  margin-bottom: 40px;
+}
+
+.configurator-logo h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  transition: color var(--transition-speed);
+}
+
+.configurator-logo p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: color var(--transition-speed);
+}
+
+/* Section titles */
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin: 30px 0 15px;
+  transition: color var(--transition-speed);
+}
+
+/* Vehicle type selector */
+.vehicle-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style-type: none;
+  margin-bottom: 30px;
+}
+
+.vehicle-type-item {
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vehicle-type-item.active {
+  background-color: var(--accent);
+  color: white;
+}
+
+.vehicle-type-item:hover:not(.active) {
+  background-color: var(--shadow);
+}
+
+.vehicle-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+/* Tint percentage selector */
+.tint-percentage-selector {
+  margin-bottom: 30px;
+}
+
+.tint-percentage-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tint-percentage-buttons button {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.tint-percentage-buttons button:hover {
+  transform: translateY(-2px);
+}
+
+/* Special styling for the tint percentages to show gradual darkening */
+.tint-percentage-buttons button[data-tint="Clear"] {
+  background-color: #ffffff !important;
+  color: #222 !important;
+  border: 1px solid #ddd !important;
+}
+
+.tint-percentage-buttons button[data-tint="5%"] {
+  background-color: #222 !important;
+  color: white !important;
+}
+
+.tint-percentage-buttons button[data-tint="20%"] {
+  background-color: #444 !important;
+  color: white !important;
+}
+
+.tint-percentage-buttons button[data-tint="35%"] {
+  background-color: #666 !important;
+  color: white !important;
+}
+
+.tint-percentage-buttons button[data-tint="50%"] {
+  background-color: #888 !important;
+  color: white !important;
+}
+
+.tint-percentage-buttons button.active {
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 5px var(--accent) !important;
+}
+
+/* Dark mode toggle */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 26px;
+  border-radius: 20px;
+  background-color: var(--border);
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.toggle-thumb {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: white;
+  top: 3px;
+  left: 3px;
+  transition: transform var(--transition-speed);
+}
+
+[data-theme="dark"] .toggle-thumb {
+  transform: translateX(24px);
+  background-color: var(--accent);
+}
+
+/* Quote request section */
+.quote-request {
+  margin-top: 40px;
+  background-color: var(--card-bg);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.quote-request h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+  transition: color var(--transition-speed);
+}
+
+.quote-request p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+  transition: color var(--transition-speed);
+}
+
+.request-quote-btn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  display: block;
+  width: 100%;
+}
+
+.request-quote-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* Vehicle display section */
+.vehicle-showcase {
+  padding: 20px 0;
+}
+
+.vehicle-instructions {
+  background-color: var(--card-bg);
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  border: 1px solid var(--border);
+  transition: background-color var(--transition-speed), 
+              color var(--transition-speed), 
+              border-color var(--transition-speed);
+}
+
+/* CRITICAL: Universal vehicle overlay system for all types */
+.vehicle-overlay-system {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+  box-sizing: content-box !important;
+}
+
+/* Override any inline styles from individual vehicle pages */
+.tint-selector-container {
+  text-align: center;
+  font-family: 'Manrope', 'SF Pro Display', -apple-system, sans-serif !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* CRITICAL: Overrides for all pages regardless of inline styles */
+
+/* First, reset any potentially conflicting styles */
+.tint-selector-container *:not(script) {
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Ensure proper container styling */
+.tint-selector-container {
+  width: 100% !important;
+  max-width: 1600px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  text-align: center !important;
+  font-family: 'Manrope', 'SF Pro Display', -apple-system, sans-serif !important;
+}
+
+/* Standardized button styling */
+.choose-tint-btn {
+  background-color: var(--accent) !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  font-size: 1.2em !important;
+  cursor: pointer !important;
+  margin: 20px 0 !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+}
+
+/* Override percentage buttons */
+.tint-percentage-buttons {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  margin: 20px auto 30px !important;
+  gap: 8px !important;
+}
+
+.tint-percentage-buttons button {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  padding: 8px 14px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  margin: 0 !important;
+}
+
+.tint-percentage-buttons button:hover {
+  transform: translateY(-2px) !important;
+}
+
+.tint-percentage-buttons button.active {
+  background-color: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+}
+
+/* Force consistent styling on ALL vehicle containers */
+.sedan-views-container,
+.suv-views-container,
+.suburban-views-container,
+.pickup-views-container,
+.coupe-views-container {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 30px !important;
+  flex-wrap: wrap !important;
+  margin: 0 auto 40px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  max-width: 1300px !important;
+}
+
+/* Force consistent car visualization styling */
+.car-visualization {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 600px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Force consistent car body image styling */
+.car-body {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  position: relative !important;
+  z-index: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Force consistent window tint overlay styling - highest priority */
+.window-tint,
+[id*="-tint"],
+[class*="window-tint"] {
+  position: absolute !important;
+  pointer-events: auto !important;
+  z-index: 2 !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: none !important;
+  filter: invert(1) !important;
+  transition: filter 0.2s ease-in-out, opacity 0.2s ease-in-out !important;
+}
+
+/* Hover effects */
+.window-tint:hover,
+[id*="-tint"]:hover,
+[class*="window-tint"]:hover {
+  filter: brightness(0.9) invert(1) !important;
+}
+
+/* Nice tooltip with Window name on hover */
+.window-tint::after {
+  content: attr(alt);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-5px);
+  background: var(--accent);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+  pointer-events: none;
+}
+
+.window-tint:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+/* Options menu for individual window tinting */
+.tint-options-menu {
+  position: absolute !important;
+  background-color: white !important;
+  border: 1px solid #ccc !important;
+  border-radius: 5px !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+  z-index: 1000 !important;
+  padding: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  min-width: 110px !important;
+}
+
+.tint-options-menu button {
+  background-color: #f0f0f0 !important;
+  color: black !important;
+  border: 1px solid #ddd !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  border-radius: 3px !important;
+  font-size: 0.9em !important;
+  text-align: center !important;
+  transition: background-color 0.2s !important;
+  margin: 0 !important;
+}
+
+.tint-options-menu button:hover {
+  background-color: var(--accent) !important;
+  color: white !important;
+}
+
+/* Ensure scale overlay works correctly */
+.scale-overlay {
+  transform: scale(1.2) !important;
+  transform-origin: center center !important;
+  z-index: 3 !important;
+}
+
+/* Package quote section */
+.package-quote-section {
+  margin-top: 40px !important;
+  margin-bottom: 30px !important;
+  text-align: center !important;
+  padding: 20px !important;
+  background-color: var(--bg-secondary) !important;
+  border-radius: 8px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+  .car-visualization {
+    max-width: 450px !important;
+  }
+  
+  .sedan-views-container,
+  .suv-views-container,
+  .suburban-views-container,
+  .pickup-views-container,
+  .coupe-views-container {
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sedan-views-container,
+  .suv-views-container,
+  .suburban-views-container,
+  .pickup-views-container,
+  .coupe-views-container {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .car-visualization {
+    max-width: 100% !important;
+    margin-bottom: 30px !important;
+  }
+}
+
+/* IMPORTANT: All window positions remain exactly as they were */
+/* SUV window positions */
+#suv-windshield-tint { left: 25.27%; top: 5.19%; width: 43.11%; height: 20.85%; }
+#suv-driver-window-tint { left: 67.88%; top: 5.51%; width: 11.38%; height: 21.17%; }
+#suv-rear-driver-window-tint { left: 79.06%; top: 5.51%; width: 12.57%; height: 16.94%; }
+#suv-headlights-tint { left: 2.02%; top: 32.20%; width: 53.89%; height: 16.45%; }
+#suv-rear-windshield-tint { left: 8.60%; top: 9.97%; width: 40.40%; height: 17.66%; }
+#suv-passenger-window-tint { left: 71.60%; top: 7.63%; width: 22.50%; height: 23.22%; }
+#suv-rear-passenger-window-tint { left: 57.00%; top: 7.77%; width: 18.90%; height: 18.99%; }
+#suv-tail-light-tint { left: 95.83%; top: 23.84%; width: 3.19%; height: 8.47%; }
+#suv-tail-lights-tint { left: 1.70%; top: 26.00%; width: 55.20%; height: 13.13%; }
+
+/* Sedan window positions */
+#sedan-windshield-tint { left: 22.50%; top: 6.63%; width: 42.36%; height: 25.75%; }
+#sedan-driver-window-tint { left: 62.51%; top: 6.87%; width: 12.64%; height: 27.83%; }
+#sedan-rear-driver-window-tint { left: 75.15%; top: 7.57%; width: 13.29%; height: 22.26%; }
+#sedan-headlights-tint { left: 2.30%; top: 44.99%; width: 44.73%; height: 20.17%; }
+#sedan-passenger-window-tint { left: 66.49%; top: 6.17%; width: 19.59%; height: 23.66%; }
+#sedan-rear-windshield-tint { left: 12.70%; top: 5.20%; width: 40.87%; height: 20.55%; }
+#sedan-rear-passenger-window-tint { left: 53.39%; top: 7.77%; width: 14.90%; height: 21.99%; }
+#sedan-tail-lights-tint { left: 1.50%; top: 29.11%; width: 45.03%; height: 19.18%; }
+
+/* Suburban window positions */
+#suburban-windshield-tint {
+  left: 18.27%;
+  top: 5.19%;
+  width: 48.11%;
+  height: 20.85%;
+}
+
+#suburban-driver-window-tint,
+#suburban-DriverWindow-tint {
+  left: 66.25%;
+  top: 6.00%;
+  width: 9.38%;
+  height: 22.17%;
+}
+
+#suburban-rear-driver-window-tint,
+#suburban-RearDriverWindow-tint {
+  left: 75.50%;
+  top: 5.99%;
+  width: 12.97%;
+  height: 19.94%;
+}
+
+#suburban-headlights-tint,
+#suburban-HeadLights-tint {
+  left: 0.75%;
+  top: 34.20%;
+  width: 50.89%;
+  height: 19.50%;
+}
+
+#suburban-driver-rear-extended-window-tint {
+  left: 86.21%;
+  top: 7.83%;
+  width: 11.39%;
+  height: 14.78%;
+}
+
+#suburban-rear-windshield-tint {
+  left: 2.50%;
+  top: 6.97%;
+  width: 45.40%;
+  height: 22.66%;
+}
+
+#suburban-passenger-window-tint,
+#suburban-PassengerWindow-tint {
+  left: 77.60%;
+  top: 11.63%;
+  width: 15.50%;
+  height: 19.22%;
+}
+
+#suburban-rear-passenger-window-tint {
+  left: 66.7%;
+  top: 9.53%;
+  width: 12.00%;
+  height: 20.50%;
+}
+
+#suburban-tail-lights-tint {
+  left: 1.70%;
+  top: 3.25%;
+  width: 49.20%;
+  height: 48.00%;
+}
+
+#suburban-extended-rear-passenger-window-tint {
+  left: 47.32%;
+  top: 6.82%;
+  width: 16.23%;
+  height: 21.15%;
+}
+
+/* Pickup window positions */
+#truck-windshield-tint {
+  left: 22.27%;
+  top: 4.99%;
+  width: 42.50%;
+  height: 19.85%;
+}
+
+#truck-driver-window-tint,
+#truck-DriverWindow-tint {
+  left: 64.25%;
+  top: 6.00%;
+  width: 11.38%;
+  height: 19.17%;
+}
+
+#truck-rear-driver-window-tint,
+#truck-RearDriverWindow-tint {
+  left: 74.00%;
+  top: 5.25%;
+  width: 8.97%;
+  height: 19.94%;
+}
+
+#truck-headlights-tint,
+#truck-HeadLights-tint {
+  left: 1.50%;
+  top: 30.99%;
+  width: 49.99%;
+  height: 16.50%;
+}
+
+#truck-rear-windshield-tint {
+  left: 32.50%;
+  top: 3.17%;
+  width: 40.40%;
+  height: 22.66%;
+}
+
+#truck-passenger-window-tint,
+#truck-PassengerWindow-tint {
+  left: 80.60%;
+  top: 7.63%;
+  width: 14.00%;
+  height: 19.22%;
+}
+
+#truck-rear-passenger-window-tint {
+  left: 74.50%;
+  top: 7.53%;
+  width: 11.50%;
+  height: 20.50%;
+}
+
+#truck-tail-lights-tint {
+  left: 0.50%;
+  top: 3.99%;
+  width: 58.45%;
+  height: 50.00%;
+}
+
+/* Coupe window positions */
+#windshield-tint {
+  left: 22.50%;
+  top: 6.63%;
+  width: 44.36%;
+  height: 25.75%;
+}
+
+#driver-window-tint {
+  left: 66.51%;
+  top: 7.30%;
+  width: 14.50%;
+  height: 24.00%;
+}
+
+#rear-driver-window-tint {
+  left: 79.50%;
+  top: 8.57%;
+  width: 7.99%;
+  height: 16.38%;
+}
+
+#headlights-tint {
+  left: 0.0%;
+  top: 42.00%;
+  width: 51.50%;
+  height: 22.00%;
+}
+
+#passenger-window-tint {
+  left: 69.49%;
+  top: 7.17%;
+  width: 19.59%;
+  height: 16.66%;
+}
+
+#rear-windshield-tint {
+  left: 16.70%;
+  top: 5.20%;
+  width: 42.20%;
+  height: 20.55%;
+}
+
+#passenger-quarter-window-tint {
+  left: 60.5%;
+  top: 7.0%;
+  width: 12.0%;
+  height: 18.0%;
+}
+
+#tail-lights-tint {
+  left: 2.30%;
+  top: 29.11%;
+  width: 51.03%;
+  height: 15.18%;
+}
+#headlights-tint {
+  left: 0.0%;
+  top: 42.00%;
+  width: 51.50%;
+  height: 22.00%;
+}
+
+#passenger-window-tint {
+  left: 69.49%;
+  top: 7.17%;
+  width: 19.59%;
+  height: 16.66%;
+}
+
+#rear-windshield-tint {
+  left: 16.70%;
+  top: 5.20%;
+  width: 42.20%;
+  height: 20.55%;
+}
+
+#passenger-quarter-window-tint {
+  left: 60.5%;
+  top: 7.0%;
+  width: 12.0%;
+  height: 18.0%;
+}
+
+#tail-lights-tint {
+  left: 2.30%;
+  top: 29.11%;
+  width: 51.03%;
+  height: 15.18%;
+}
+  height: 20.55%;
+}
+
+#passenger-quarter-window-tint {
+  left: 60.5%;
+  top: 7.0%;
+  width: 12.0%;
+  height: 18.0%;
+}
+
+#tail-lights-tint {
+  left: 2.30%;
+  top: 29.11%;
+  width: 51.03%;
+  height: 15.18%;
+}
+#tail-lights-tint {
+  left: 2.30%;
+  top: 29.11%;
+  width: 51.03%;
+  height: 15.18%;
+}
+  height: 20.55%;
+}
+
+#passenger-quarter-window-tint {
+  left: 60.5%;
+  top: 7.0%;
+  width: 12.0%;
+  height: 18.0%;
+}
+
+#tail-lights-tint {
+  left: 2.30%;
+  top: 29.11%;
+  width: 51.03%;
+  height: 15.18%;
+}
+  width: 51.03%;
+  height: 15.18%;
+}
+  height: 20.55%;
+}
+
+#passenger-quarter-window-tint {
+  left: 60.5%;
+  top: 7.0%;
+  width: 12.0%;
+  height: 18.0%;
+}
+
+#tail-lights-tint {
+  left: 2.30%;
+  top: 29.11%;
+  width: 51.03%;
+  height: 15.18%;
+}

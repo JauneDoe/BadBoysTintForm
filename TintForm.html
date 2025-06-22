@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vehicle Tint Selection Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0;}
+    form { background: #fff; max-width: none; width: 100%; margin: 0 auto; padding: 0; border-radius: 0; box-shadow: none;}
+    h2 { text-align: center; color: #1a232f; }
+    label { display: block; margin: 14px 0 6px 0; }
+    input, select, textarea { width: 100%; padding: 8px; margin-bottom: 14px; border-radius: 5px; border: 1px solid #c3c5ca;}
+    input[type="checkbox"] { width: auto; }
+    .checkbox-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;}
+    .checkbox-row label { margin-right: 18px; font-weight: normal; }
+    button { background: #0a5cff; color: #fff; border: none; padding: 12px 0; border-radius: 6px; font-size: 1rem; cursor: pointer;}
+    button:active { background: #0633a0; }
+    .section-title { font-weight: bold; margin: 20px 0 10px 0; font-size: 1.2rem; }
+    .form-row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .form-group { flex: 1; min-width: 220px; }
+    #visualizer-container { max-width: 500px; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <form id="tint-form" style="max-width:1200px;width:auto;margin:0 auto;background:transparent;box-shadow:none;border-radius:0;padding:0 12px;">
+    <h2>Vehicle Tint Selection Form</h2>
+    <!-- Customer Info -->
+    <div class="section-title">Contact Information</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" name="phone">
+      </div>
+    </div>
+    <!-- Vehicle Info -->
+    <div class="section-title">Vehicle Information</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="year">Year</label>
+        <select id="year" name="year" required>
+          <option value="">Select Year</option>
+          <!-- JS fills options -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="make">Make</label>
+        <select id="make" name="make" required disabled>
+          <option value="">Select Make</option>
+          <!-- JS fills options -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="model">Model</label>
+        <select id="model" name="model" required disabled>
+          <option value="">Select Model</option>
+          <!-- JS fills options -->
+        </select>
+      </div>
+    </div>
+    <!-- Tint Options -->
+    <div class="section-title">Tint Options</div>
+    <div class="form-row">
+      <div class="form-group" style="flex: 2;">
+        <label>What would you like tinted?</label>
+        <div class="checkbox-row">
+          <label><input type="checkbox" name="tint[]" value="All Side Windows"> All Side Windows</label>
+          <label><input type="checkbox" name="tint[]" value="Front Windows Only"> Front Windows Only</label>
+          <label><input type="checkbox" name="tint[]" value="Rear Windows Only"> Rear Windows Only</label>
+          <label><input type="checkbox" name="tint[]" value="Windshield Brow"> Windshield Brow</label>
+          <label><input type="checkbox" name="tint[]" value="Full Windshield"> Full Windshield</label>
+          <label><input type="checkbox" name="tint[]" value="Rear Windshield"> Rear Windshield</label>
+          <label><input type="checkbox" name="tint[]" value="Sunroof/Moonroof"> Sunroof/Moonroof</label>
+          <label><input type="checkbox" name="tint[]" value="Headlights"> Headlights</label>
+          <label><input type="checkbox" name="tint[]" value="Taillights"> Taillights</label>
+          <label><input type="checkbox" name="tint[]" value="Other"> Other: <input type="text" name="other_tint" style="width:100px;display:inline;"></label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="tint_percentage">Tint Percentage</label>
+        <select name="tint_percentage" id="tint_percentage" required>
+          <option value="">Select Tint %</option>
+          <option value="5%">5% (Limo)</option>
+          <option value="15%">15%</option>
+          <option value="20%">20%</option>
+          <option value="35%">35%</option>
+          <option value="50%">50%</option>
+          <option value="Unsure">Unsure, want a recommendation</option>
+        </select>
+      </div>
+    </div>
+    <!-- Notes -->
+    <div class="section-title">Additional Notes</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2;">
+        <textarea name="notes" id="notes" rows="3" placeholder="Let us know anything else!"></textarea>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+  <div id="visualizer-container" style="width:100%;min-height:700px;margin:0;padding:0;background:transparent;box-shadow:none;border-radius:0;max-width:none;"></div>
+  <script>
+    // --- Populate years from current year back to 1990 ---
+    const yearSelect = document.getElementById('year');
+    const makeSelect = document.getElementById('make');
+    const modelSelect = document.getElementById('model');
+    const currentYear = new Date().getFullYear();
+    for(let y=currentYear; y>=1990; y--) {
+      let opt = document.createElement('option');
+      opt.value = y; opt.innerText = y;
+      yearSelect.appendChild(opt);
+    }
+
+    // --- Populate makes based on year ---
+    yearSelect.addEventListener('change', async function() {
+      makeSelect.innerHTML = '<option value="">Loading...</option>';
+      makeSelect.disabled = true;
+      modelSelect.innerHTML = '<option value="">Select Model</option>';
+      modelSelect.disabled = true;
+      if(this.value) {
+        // Use GetAllMakes for a complete list
+        let res = await fetch('https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json');
+        let makes = (await res.json()).Results;
+        let uniqueMakes = [...new Set(makes.map(x => x.Make_Name))].sort();
+        makeSelect.innerHTML = '<option value="">Select Make</option>';
+        uniqueMakes.forEach(make => {
+          let opt = document.createElement('option');
+          opt.value = make; opt.innerText = make;
+          makeSelect.appendChild(opt);
+        });
+        makeSelect.disabled = false;
+      } else {
+        makeSelect.innerHTML = '<option value="">Select Make</option>';
+        makeSelect.disabled = true;
+      }
+    });
+
+    // --- Populate models based on make/year ---
+    makeSelect.addEventListener('change', async function() {
+      modelSelect.innerHTML = '<option value="">Loading...</option>';
+      modelSelect.disabled = true;
+      if(this.value) {
+        // Use GetModelsForMake for all models of the selected make
+        let res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${makeSelect.value}?format=json`);
+        let models = (await res.json()).Results;
+        let uniqueModels = [...new Set(models.map(x => x.Model_Name))].sort();
+        modelSelect.innerHTML = '<option value="">Select Model</option>';
+        uniqueModels.forEach(model => {
+          let opt = document.createElement('option');
+          opt.value = model; opt.innerText = model;
+          modelSelect.appendChild(opt);
+        });
+        modelSelect.disabled = false;
+      } else {
+        modelSelect.innerHTML = '<option value="">Select Model</option>';
+        modelSelect.disabled = true;
+      }
+    });
+
+    // --- Model to body style mapping and smart matching ---
+    const modelToBodyStyle = {
+      'Camry': 'Sedan', 'Accord': 'Sedan', 'Altima': 'Sedan', 'Malibu': 'Sedan', 'Fusion': 'Sedan',
+      'Sonata': 'Sedan', 'Impala': 'Sedan', 'Civic': 'Sedan', 'Corolla': 'Sedan', 'Jetta': 'Sedan',
+      'Sentra': 'Sedan', 'Elantra': 'Sedan', 'Passat': 'Sedan', 'Focus': 'Sedan', 'Charger': 'Sedan',
+      '300': 'Sedan', 'Maxima': 'Sedan',
+      'Mustang': 'Coupe', 'Camaro': 'Coupe', 'Challenger': 'Coupe', 'BRZ': 'Coupe', 'FR-S': 'Coupe',
+      'Genesis Coupe': 'Coupe', '911': 'Coupe',
+      'F-150': 'Pickup', 'Silverado': 'Pickup', 'Sierra': 'Pickup', 'Ram 1500': 'Pickup',
+      'Tacoma': 'Pickup', 'Tundra': 'Pickup', 'Frontier': 'Pickup', 'Ridgeline': 'Pickup',
+      'Colorado': 'Pickup', 'Ranger': 'Pickup',
+      'Highlander': 'SUV', 'Pilot': 'SUV', 'Explorer': 'SUV', 'Edge': 'SUV', 'Escape': 'SUV',
+      'CR-V': 'SUV', 'RAV4': 'SUV', 'Equinox': 'SUV', 'Traverse': 'SUV', 'Santa Fe': 'SUV',
+      'Tucson': 'SUV', 'Grand Cherokee': 'SUV', 'Cherokee': 'SUV', 'Tahoe': 'SUV', 'Expedition': 'SUV',
+      'Enclave': 'SUV', 'Rogue': 'SUV', 'Sorento': 'SUV', 'HR-V': 'SUV', 'CX-5': 'SUV',
+      'CX-9': 'SUV', 'Murano': 'SUV', 'Model X': 'SUV', 'Model Y': 'SUV', 'Bolt EV': 'SUV',
+      'Outback': 'SUV', 'Forester': 'SUV', 'Golf': 'SUV', 'Soul': 'SUV', 'Yukon': 'Suburban', 
+      'Suburban': 'Suburban', 'Escalade': 'Suburban', 'Navigator': 'Suburban',
+      'Odyssey': 'Suburban', 'Sienna': 'Suburban', 'Grand Caravan': 'Suburban', 'Pacifica': 'Suburban',
+      'Fit': 'SUV', 'Versa': 'SUV', 'Prius': 'SUV',
+      'Miata': 'Coupe', 'Corvette': 'Coupe', 'Supra': 'Coupe', '370Z': 'Coupe',
+      'Model S': 'Sedan', 'Model 3': 'Sedan', 'Leaf': 'Sedan'
+    };
+    function getClosestBodyStyle(model) {
+      model = model.trim();
+      if (modelToBodyStyle[model]) return modelToBodyStyle[model];
+      const m = model.toLowerCase();
+      if (m.includes('pickup') || m.includes('truck')) return 'Pickup';
+      if (m.includes('coupe') || m.includes('convertible') || m.includes('roadster') || m.includes('sport')) return 'Coupe';
+      if (m.includes('suburban') || m.includes('yukon xl') || m.includes('escalade') || m.includes('navigator')) return 'Suburban';
+      if (m.includes('suv') || m.includes('wagon') || m.includes('crossover') || m.includes('hatchback') || m.includes('ev')) return 'SUV';
+      if (m.includes('van') || m.includes('minivan') || m.includes('caravan')) return 'Suburban';
+      return 'Sedan';
+    }
+
+    // --- Load correct visualizer in iframe when model is selected ---
+    const visualizerContainer = document.getElementById('visualizer-container');
+    modelSelect.addEventListener('change', function() {
+      const model = modelSelect.value;
+      const bodyStyle = getClosestBodyStyle(model);
+      let page = '';
+      if (bodyStyle === 'Sedan') page = 'SedanIndex.html';
+      else if (bodyStyle === 'SUV') page = 'SUVIndex.html';
+      else if (bodyStyle === 'Pickup') page = 'PickupIndex.html';
+      else if (bodyStyle === 'Coupe') page = 'CoupeIndex.html';
+      else if (bodyStyle === 'Suburban') page = 'SuburbanIndex.html';
+      if (page) {
+        visualizerContainer.innerHTML =
+          `<iframe src="${page}" style="width:100%;min-height:800px;border:none;border-radius:12px;box-shadow:0 2px 12px #0001;overflow:hidden;" loading="lazy" allowfullscreen></iframe>`;
+        visualizerContainer.style.display = 'block';
+        setTimeout(() => {
+          visualizerContainer.scrollIntoView({ behavior: "smooth" });
+        }, 150);
+      } else {
+        visualizerContainer.innerHTML = '';
+        visualizerContainer.style.display = 'none';
+      }
+    });
+
+    // --- Send tint percentage to iframe ---
+    const tintSelect = document.getElementById('tint_percentage');
+    tintSelect.addEventListener('change', function() {
+      const tintValue = tintSelect.value;
+      const iframe = document.querySelector('#visualizer-container iframe');
+      if (iframe && tintValue) {
+        iframe.contentWindow.postMessage({ type: 'setTint', value: tintValue }, '*');
+      }
+    });
+
+    // --- Send tint area selection to iframe ---
+    const tintCheckboxes = document.querySelectorAll('input[type="checkbox"][name="tint[]"]');
+    tintCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const checked = Array.from(tintCheckboxes).filter(x => x.checked).map(x => x.value);
+        const iframe = document.querySelector('#visualizer-container iframe');
+        if (iframe) {
+          iframe.contentWindow.postMessage({ type: 'setTintArea', value: checked }, '*');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
