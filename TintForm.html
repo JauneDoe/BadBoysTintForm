@@ -21,8 +21,17 @@
     #visualizer-container { max-width: 500px; margin: 20px auto; }
   </style>
 </head>
-<body>
-  <form id="tint-form" style="max-width:1200px;width:auto;margin:0 auto;background:transparent;box-shadow:none;border-radius:0;padding:0 12px;">
+<body>  <form id="tint-form" action="https://formspree.io/f/xdkovnqz" method="POST" style="max-width:1200px;width:auto;margin:0 auto;background:transparent;box-shadow:none;border-radius:0;padding:0 12px;">    <!-- Hidden fields for email routing -->
+    <input type="hidden" name="_to" value="jauneits@gmail.com">
+    <input type="hidden" name="_subject" value="New Tint Form Submission">
+    <input type="hidden" name="_next" value="thank-you.html">
+    
+    <!-- Hidden fields for selected vehicle info -->
+    <input type="hidden" id="selected_year" name="selected_year" value="">
+    <input type="hidden" id="selected_make" name="selected_make" value="">
+    <input type="hidden" id="selected_model" name="selected_model" value="">
+    <input type="hidden" id="selected_body_style" name="selected_body_style" value="">
+    
     <h2>Vehicle Tint Selection Form</h2>
     <!-- Customer Info -->
     <div class="section-title">Contact Information</div>
@@ -102,8 +111,7 @@
       <div class="form-group" style="flex:2;">
         <textarea name="notes" id="notes" rows="3" placeholder="Let us know anything else!"></textarea>
       </div>
-    </div>
-    <!-- Actions -->
+    </div>    <!-- Actions -->
     <div class="form-actions">
       <button type="submit">Submit</button>
     </div>
@@ -119,14 +127,16 @@
       let opt = document.createElement('option');
       opt.value = y; opt.innerText = y;
       yearSelect.appendChild(opt);
-    }
-
-    // --- Populate makes based on year ---
+    }    // --- Populate makes based on year ---
     yearSelect.addEventListener('change', async function() {
       makeSelect.innerHTML = '<option value="">Loading...</option>';
       makeSelect.disabled = true;
       modelSelect.innerHTML = '<option value="">Select Model</option>';
       modelSelect.disabled = true;
+      
+      // Update hidden field
+      document.getElementById('selected_year').value = this.value;
+      
       if(this.value) {
         // Use GetAllMakes for a complete list
         let res = await fetch('https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json');
@@ -143,12 +153,14 @@
         makeSelect.innerHTML = '<option value="">Select Make</option>';
         makeSelect.disabled = true;
       }
-    });
-
-    // --- Populate models based on make/year ---
+    });    // --- Populate models based on make/year ---
     makeSelect.addEventListener('change', async function() {
       modelSelect.innerHTML = '<option value="">Loading...</option>';
       modelSelect.disabled = true;
+      
+      // Update hidden field
+      document.getElementById('selected_make').value = this.value;
+      
       if(this.value) {
         // Use GetModelsForMake for all models of the selected make
         let res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${makeSelect.value}?format=json`);
@@ -200,13 +212,16 @@
       if (m.includes('suv') || m.includes('wagon') || m.includes('crossover') || m.includes('hatchback') || m.includes('ev')) return 'SUV';
       if (m.includes('van') || m.includes('minivan') || m.includes('caravan')) return 'Suburban';
       return 'Sedan';
-    }
-
-    // --- Load correct visualizer in iframe when model is selected ---
+    }    // --- Load correct visualizer in iframe when model is selected ---
     const visualizerContainer = document.getElementById('visualizer-container');
     modelSelect.addEventListener('change', function() {
       const model = modelSelect.value;
       const bodyStyle = getClosestBodyStyle(model);
+      
+      // Update hidden fields
+      document.getElementById('selected_model').value = model;
+      document.getElementById('selected_body_style').value = bodyStyle;
+      
       let page = '';
       if (bodyStyle === 'Sedan') page = 'SedanIndex.html';
       else if (bodyStyle === 'SUV') page = 'SUVIndex.html';
@@ -243,9 +258,20 @@
         const checked = Array.from(tintCheckboxes).filter(x => x.checked).map(x => x.value);
         const iframe = document.querySelector('#visualizer-container iframe');
         if (iframe) {
-          iframe.contentWindow.postMessage({ type: 'setTintArea', value: checked }, '*');
-        }
+          iframe.contentWindow.postMessage({ type: 'setTintArea', value: checked }, '*');        }
       });
+    });    // --- Form submission handling ---
+    document.getElementById('tint-form').addEventListener('submit', function(e) {
+      // Update hidden fields one more time before submission
+      document.getElementById('selected_year').value = document.getElementById('year').value;
+      document.getElementById('selected_make').value = document.getElementById('make').value;
+      document.getElementById('selected_model').value = document.getElementById('model').value;
+      
+      // Show confirmation message
+      alert('Thank you for your submission! Your form is being sent to Bad Boys Tint. You will be redirected to a confirmation page.');
+      
+      // Let the form submit naturally to Formspree
+      return true;
     });
   </script>
 </body>
