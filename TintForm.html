@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">  <title>Vehicle Tint Selection Form</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0;}
     form { background: #fff; max-width: none; width: 100%; margin: 0 auto; padding: 0; border-radius: 0; box-shadow: none;}
@@ -246,7 +245,7 @@
       // Show loading state
       const submitBtn = this.querySelector('button[type="submit"]');
       const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Processing...';
+      submitBtn.textContent = 'Redirecting...';
       submitBtn.disabled = true;
       
       // Collect form data
@@ -268,45 +267,46 @@
       data.selectedMake = document.getElementById('make').value;
       data.selectedModel = document.getElementById('model').value;
       
-      // Format email content
-      const emailSubject = `Tint Form Submission - ${data.name || 'Customer'}`;
-      const emailBody = `New Tint Form Submission
-
-Customer Information:
-- Name: ${data.name || 'Not provided'}
-- Email: ${data.email || 'Not provided'}
-- Phone: ${data.phone || 'Not provided'}
-
-Vehicle Information:
-- Year: ${data.selectedYear || 'Not selected'}
-- Make: ${data.selectedMake || 'Not selected'}
-- Model: ${data.selectedModel || 'Not selected'}
-
-Tint Options:
-- Areas to tint: ${data.tintOptions ? data.tintOptions.join(', ') : 'None selected'}
-- Tint percentage: ${data.tint_percentage || 'Not selected'}
-- Other tint details: ${data.other_tint || 'None'}
-
-Additional Notes:
-${data.notes || 'None provided'}
-
----
-Submitted on: ${new Date().toLocaleString()}`;
+      // Build Google Forms URL with prefilled data
+      const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSenSQ2El7VceLcwKZnklFfXJC6CTjbu2psNBoktsNy68q2Wcw/viewform';
+      const params = new URLSearchParams();
       
-      // Create multiple submission options
-      const mailtoLink = `mailto:jauneits@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      // Add form parameters
+      params.append('usp', 'pp_url');
+      params.append('entry.917649196', data.name || '');
+      params.append('entry.2138650758', data.email || '');
+      params.append('entry.1861228534', data.phone || '');
+      params.append('entry.1888173968', data.selectedYear || '');
+      params.append('entry.1466640192', data.selectedMake || '');
+      params.append('entry.2138255426', data.selectedModel || '');
       
-      // Try to copy to clipboard first
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(emailBody).then(function() {
-          // Show options modal
-          showSubmissionOptions(mailtoLink, emailBody, emailSubject);
-        }).catch(function() {
-          // Fallback if clipboard fails
-          showSubmissionOptions(mailtoLink, emailBody, emailSubject);
+      // Add tint options (multiple selections)
+      if (data.tintOptions && data.tintOptions.length > 0) {
+        data.tintOptions.forEach(option => {
+          params.append('entry.357976012', option);
         });
-      } else {
-        showSubmissionOptions(mailtoLink, emailBody, emailSubject);
+      }
+      
+      // Add tint percentage
+      if (data.tint_percentage) {
+        params.append('entry.85640714', data.tint_percentage);
+      }
+      
+      // Add additional notes
+      if (data.notes || data.other_tint) {
+        const notes = [data.notes, data.other_tint].filter(Boolean).join('\n');
+        params.append('entry.1520136029', notes);
+      }
+      
+      // Construct final URL
+      const finalUrl = `${baseUrl}?${params.toString()}`;
+      
+      // Redirect to Google Forms
+      window.location.href = finalUrl;
+    });
+  </script>
+</body>
+</html>
       }
       
       // Reset button
