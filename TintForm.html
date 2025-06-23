@@ -18,9 +18,11 @@
     .form-row { display: flex; flex-wrap: wrap; gap: 16px; }
     .form-group { flex: 1; min-width: 220px; }
     #visualizer-container { max-width: 500px; margin: 20px auto; }
+    #thankyou { display: none; text-align: center; padding: 40px; background: #fff; border-radius: 12px; margin: 20px auto; max-width: 600px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+    #thankyou h2 { color: #28a745; margin-bottom: 20px; }
   </style>
 </head>
-<body>  <form id="tint-form" style="max-width:1200px;width:auto;margin:0 auto;background:transparent;box-shadow:none;border-radius:0;padding:0 12px;">
+<body>  <form id="tint-form" action="https://script.google.com/macros/s/AKfycbxrpZ_Z20clMC44E8nI_Bg6p9jhi-51mfiGQyblPqFelvo4RMmIeDeuw1enHDWOUh30/exec" method="POST" style="max-width:1200px;width:auto;margin:0 auto;background:transparent;box-shadow:none;border-radius:0;padding:0 12px;">
     <h2>Vehicle Tint Selection Form</h2>
     <!-- Customer Info -->
     <div class="section-title">Contact Information</div>
@@ -105,6 +107,12 @@
       <button type="submit">Submit</button>
     </div>
   </form>
+  
+  <div id="thankyou">
+    <h2>Thank you! Your tint request has been received.</h2>
+    <p>We'll contact you soon to schedule your appointment.</p>
+  </div>
+  
   <div id="visualizer-container" style="width:100%;min-height:700px;margin:0;padding:0;background:transparent;box-shadow:none;border-radius:0;max-width:none;"></div>  <script>
     // --- Populate years from current year back to 1990 ---
     const yearSelect = document.getElementById('year');
@@ -245,61 +253,53 @@
       // Show loading state
       const submitBtn = this.querySelector('button[type="submit"]');
       const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Redirecting...';
+      submitBtn.textContent = 'Submitting...';
       submitBtn.disabled = true;
       
       // Collect form data
       const formData = new FormData(this);
-      const data = {};
       
-      // Convert FormData to regular object
-      for (let [key, value] of formData.entries()) {
-        if (key === 'tint[]') {
-          if (!data.tintOptions) data.tintOptions = [];
-          data.tintOptions.push(value);
+      // Add selected vehicle info to form data
+      formData.append('year', document.getElementById('year').value);
+      formData.append('make', document.getElementById('make').value);
+      formData.append('model', document.getElementById('model').value);
+      
+      // Collect tint options into a single field
+      const tintOptions = [];
+      const tintCheckboxes = document.querySelectorAll('input[type="checkbox"][name="tint[]"]:checked');
+      tintCheckboxes.forEach(cb => {
+        tintOptions.push(cb.value);
+      });
+      formData.append('tint_options', tintOptions.join(', '));
+      
+      // Submit to Google Apps Script
+      fetch(this.action, {
+        method: 'POST',
+        body: formData
+      }).then(response => {
+        if (response.ok) {
+          // Hide form and show thank you message
+          this.style.display = 'none';
+          document.getElementById('thankyou').style.display = 'block';
+          document.getElementById('visualizer-container').style.display = 'none';
+          
+          // Scroll to thank you message
+          document.getElementById('thankyou').scrollIntoView({ behavior: 'smooth' });
         } else {
-          data[key] = value;
+          throw new Error('Network response was not ok');
         }
-      }
-      
-      // Get the selected vehicle info
-      data.selectedYear = document.getElementById('year').value;
-      data.selectedMake = document.getElementById('make').value;
-      data.selectedModel = document.getElementById('model').value;
-      
-      // Build Google Forms URL with prefilled data
-      const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSenSQ2El7VceLcwKZnklFfXJC6CTjbu2psNBoktsNy68q2Wcw/viewform';
-      const params = new URLSearchParams();
-      
-      // Add form parameters
-      params.append('usp', 'pp_url');
-      params.append('entry.917649196', data.name || '');
-      params.append('entry.2138650758', data.email || '');
-      params.append('entry.1861228534', data.phone || '');
-      params.append('entry.1888173968', data.selectedYear || '');
-      params.append('entry.1466640192', data.selectedMake || '');
-      params.append('entry.2138255426', data.selectedModel || '');
-      
-      // Add tint options (multiple selections)
-      if (data.tintOptions && data.tintOptions.length > 0) {
-        data.tintOptions.forEach(option => {
-          params.append('entry.357976012', option);
-        });
-      }
-      
-      // Add tint percentage
-      if (data.tint_percentage) {
-        params.append('entry.85640714', data.tint_percentage);
-      }
-      
-      // Add additional notes
-      if (data.notes || data.other_tint) {
-        const notes = [data.notes, data.other_tint].filter(Boolean).join('\n');
-        params.append('entry.1520136029', notes);
-      }
-      
-      // Construct final URL
-      const finalUrl = `${baseUrl}?${params.toString()}`;
+      }).catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting form. Please try again or contact us directly.');
+        
+        // Reset button
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      });
+    });
+  </script>
+</body>
+</html>
       
       // Redirect to Google Forms
       window.location.href = finalUrl;
