@@ -107,9 +107,6 @@
     </div>
   </form>
   <div id="visualizer-container" style="width:100%;min-height:700px;margin:0;padding:0;background:transparent;box-shadow:none;border-radius:0;max-width:none;"></div>  <script>
-    // Initialize EmailJS
-    emailjs.init("YOUR_PUBLIC_KEY"); // We'll use a demo key for now
-    
     // --- Populate years from current year back to 1990 ---
     const yearSelect = document.getElementById('year');
     const makeSelect = document.getElementById('make');
@@ -125,9 +122,6 @@
       makeSelect.disabled = true;
       modelSelect.innerHTML = '<option value="">Select Model</option>';
       modelSelect.disabled = true;
-      
-      // Update hidden field
-      document.getElementById('selected_year').value = this.value;
       
       if(this.value) {
         // Use GetAllMakes for a complete list
@@ -149,9 +143,6 @@
     makeSelect.addEventListener('change', async function() {
       modelSelect.innerHTML = '<option value="">Loading...</option>';
       modelSelect.disabled = true;
-      
-      // Update hidden field
-      document.getElementById('selected_make').value = this.value;
       
       if(this.value) {
         // Use GetModelsForMake for all models of the selected make
@@ -210,10 +201,6 @@
       const model = modelSelect.value;
       const bodyStyle = getClosestBodyStyle(model);
       
-      // Update hidden fields
-      document.getElementById('selected_model').value = model;
-      document.getElementById('selected_body_style').value = bodyStyle;
-      
       let page = '';
       if (bodyStyle === 'Sedan') page = 'SedanIndex.html';
       else if (bodyStyle === 'SUV') page = 'SUVIndex.html';
@@ -259,7 +246,7 @@
       // Show loading state
       const submitBtn = this.querySelector('button[type="submit"]');
       const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Sending...';
+      submitBtn.textContent = 'Processing...';
       submitBtn.disabled = true;
       
       // Collect form data
@@ -281,68 +268,114 @@
       data.selectedMake = document.getElementById('make').value;
       data.selectedModel = document.getElementById('model').value;
       
-      // Prepare email template parameters
-      const templateParams = {
-        to_email: 'jauneits@gmail.com',
-        from_name: data.name || 'Customer',
-        from_email: data.email || 'Not provided',
-        phone: data.phone || 'Not provided',
-        vehicle_year: data.selectedYear || 'Not selected',
-        vehicle_make: data.selectedMake || 'Not selected',
-        vehicle_model: data.selectedModel || 'Not selected',
-        tint_areas: data.tintOptions ? data.tintOptions.join(', ') : 'None selected',
-        tint_percentage: data.tint_percentage || 'Not selected',
-        other_tint: data.other_tint || 'None',
-        notes: data.notes || 'None provided',
-        subject: `Tint Form Submission - ${data.name || 'Customer'}`
-      };
-      
-      // For now, let's use a simple approach - create a mailto link as fallback
-      // This will work immediately while you set up a proper email service
-      const emailBody = `
-New Tint Form Submission
+      // Format email content
+      const emailSubject = `Tint Form Submission - ${data.name || 'Customer'}`;
+      const emailBody = `New Tint Form Submission
 
 Customer Information:
-- Name: ${templateParams.from_name}
-- Email: ${templateParams.from_email}
-- Phone: ${templateParams.phone}
+- Name: ${data.name || 'Not provided'}
+- Email: ${data.email || 'Not provided'}
+- Phone: ${data.phone || 'Not provided'}
 
 Vehicle Information:
-- Year: ${templateParams.vehicle_year}
-- Make: ${templateParams.vehicle_make}
-- Model: ${templateParams.vehicle_model}
+- Year: ${data.selectedYear || 'Not selected'}
+- Make: ${data.selectedMake || 'Not selected'}
+- Model: ${data.selectedModel || 'Not selected'}
 
 Tint Options:
-- Areas to tint: ${templateParams.tint_areas}
-- Tint percentage: ${templateParams.tint_percentage}
-- Other tint details: ${templateParams.other_tint}
+- Areas to tint: ${data.tintOptions ? data.tintOptions.join(', ') : 'None selected'}
+- Tint percentage: ${data.tint_percentage || 'Not selected'}
+- Other tint details: ${data.other_tint || 'None'}
 
 Additional Notes:
-${templateParams.notes}
-      `.trim();
+${data.notes || 'None provided'}
+
+---
+Submitted on: ${new Date().toLocaleString()}`;
       
-      // Create mailto link
-      const mailtoLink = `mailto:jauneits@gmail.com?subject=${encodeURIComponent(templateParams.subject)}&body=${encodeURIComponent(emailBody)}`;
+      // Create multiple submission options
+      const mailtoLink = `mailto:jauneits@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
       
-      // Try to send via email client
-      try {
-        window.location.href = mailtoLink;
-        
-        // Reset form and show success
-        setTimeout(() => {
-          alert('Thank you! Your email client should open with the form details. Please send the email to complete your request.');
-          window.location.href = 'thank-you.html';
-        }, 1000);
-        
-      } catch (error) {
-        console.error('Error:', error);
-        alert('There was an error processing your submission. Please try again or contact us directly at jauneits@gmail.com');
-        
-        // Reset button
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
+      // Try to copy to clipboard first
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(emailBody).then(function() {
+          // Show options modal
+          showSubmissionOptions(mailtoLink, emailBody, emailSubject);
+        }).catch(function() {
+          // Fallback if clipboard fails
+          showSubmissionOptions(mailtoLink, emailBody, emailSubject);
+        });
+      } else {
+        showSubmissionOptions(mailtoLink, emailBody, emailSubject);
       }
+      
+      // Reset button
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
     });
+    
+    // Function to show submission options
+    function showSubmissionOptions(mailtoLink, emailBody, emailSubject) {
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.8); z-index: 10000; display: flex; 
+        align-items: center; justify-content: center; padding: 20px;
+      `;
+      
+      modal.innerHTML = `
+        <div style="background: white; max-width: 600px; padding: 30px; border-radius: 12px; max-height: 80vh; overflow-y: auto;">
+          <h3 style="margin-top: 0; color: #1a232f;">Choose how to send your form:</h3>
+          
+          <div style="margin: 20px 0;">
+            <button onclick="window.open('${mailtoLink}')" style="background: #0a5cff; color: white; border: none; padding: 12px 20px; border-radius: 6px; margin: 5px; cursor: pointer; width: 100%;">
+              📧 Open Email Client (Recommended)
+            </button>
+          </div>
+          
+          <div style="margin: 20px 0;">
+            <button onclick="copyToClipboard('${emailBody.replace(/'/g, "\\'")}'); alert('Form details copied! Now go to your email and paste this into a new email to jauneits@gmail.com')" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 6px; margin: 5px; cursor: pointer; width: 100%;">
+              📋 Copy Details & Email Manually
+            </button>
+          </div>
+          
+          <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #0a5cff;">
+            <strong>Send to:</strong> jauneits@gmail.com<br>
+            <strong>Subject:</strong> ${emailSubject}
+          </div>
+          
+          <div style="margin: 20px 0;">
+            <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+              Close
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Close on background click
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+    }
+    
+    // Function to copy text to clipboard
+    function copyToClipboard(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    }
   </script>
 </body>
 </html>
